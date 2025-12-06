@@ -1,35 +1,40 @@
 import { v4 as uuidv4 } from "uuid";
-export default function CoursesDao(db) {
+import CourseModel from "./model.js";
+import EnrollmentModel from "../Enrollments/model.js";
+
+export default function CoursesDao() {
+
   function findAllCourses() {
-    return db.courses;
+    return CourseModel.find({});
   }
-  function findCoursesForEnrolledUser(userId) {
-  const { courses, enrollments } = db;
-  const enrolledCourses = courses.filter((course) =>
-    enrollments.some((enrollment) => enrollment.user === userId && enrollment.course === course._id));
-  return enrolledCourses;
-}
-function createCourse(course) {
-  const newCourse = { ...course, _id: uuidv4() };
-  db.courses = [...db.courses, newCourse];
-  return newCourse;
-}
- function deleteCourse(courseId) {
-    const { courses, enrollments } = db;
-    db.courses = courses.filter((course) => course._id !== courseId);
-    db.enrollments = enrollments.filter(
-      (enrollment) => enrollment.course !== courseId
-  );
-}
-function updateCourse(courseId, courseUpdates) {
-  const { courses } = db;
-  const course = courses.find((course) => course._id === courseId);
-  Object.assign(course, courseUpdates);
-  return course;
-}
 
+  async function findCoursesForEnrolledUser(userId) {
+    const enrollments = await EnrollmentModel.find({ user: userId });
 
+    const courseIds = enrollments.map((e) => e.course);
 
-  return { findAllCourses,findCoursesForEnrolledUser,createCourse,deleteCourse,updateCourse };
+    return CourseModel.find({ _id: { $in: courseIds } });
+  }
+
+  function createCourse(course) {
+    const newCourse = { ...course, _id: uuidv4() };
+    return CourseModel.create(newCourse);
+  }
+
+  async function deleteCourse(courseId) {
+    await EnrollmentModel.deleteMany({ course: courseId });
+    return CourseModel.deleteOne({ _id: courseId });
+  }
+
+  function updateCourse(courseId, updates) {
+    return CourseModel.updateOne({ _id: courseId }, { $set: updates });
+  }
+
+  return {
+    findAllCourses,
+    findCoursesForEnrolledUser,
+    createCourse,
+    deleteCourse,
+    updateCourse
+  };
 }
-

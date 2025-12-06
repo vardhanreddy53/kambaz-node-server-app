@@ -1,33 +1,51 @@
 import { v4 as uuidv4 } from "uuid";
+import CourseModel from "../Courses/model.js";
 
-export default function AssignmentsDao(db) {
-  function findAssignmentsForCourse(courseId) {
-    const { assignments } = db;
-    return assignments.filter((assignment) => assignment.course === courseId);
-  }
-  function createAssignment(assignment) {
-    const newAssignment = { ...assignment, _id: uuidv4() };
-    db.assignments = [...db.assignments, newAssignment];
+export default function AssignmentsDao() {
+
+  const findAssignmentsForCourse = async (courseId) => {
+    const course = await CourseModel.findById(courseId);
+    if (!course) return [];
+    return course.assignments;
+  };
+
+  const createAssignment = async (courseId, assignmentData) => {
+    const course = await CourseModel.findById(courseId);
+    if (!course) return null;
+
+    const newAssignment = {
+      _id: uuidv4(),
+      ...assignmentData,
+    };
+
+    course.assignments.push(newAssignment);
+    await course.save();
+
     return newAssignment;
-  }
+  };
 
-  function updateAssignment(assignmentId, assignmentUpdates) {
-    const { assignments } = db;
-   
-    const assignment = assignments.find((a) => a._id === assignmentId);
-    
-    if (assignment) {
-      Object.assign(assignment, assignmentUpdates);
-      return assignment;
-    }
-   
-    return null;
-  }
+  const updateAssignment = async (courseId, assignmentId, updates) => {
+    const course = await CourseModel.findById(courseId);
+    if (!course) return null;
 
-  function deleteAssignment(assignmentId) {
-    const { assignments } = db;
-    db.assignments = assignments.filter((assignment) => assignment._id !== assignmentId);
-  }
+    const assignment = course.assignments.id(assignmentId);
+    if (!assignment) return null;
+
+    Object.assign(assignment, updates);
+    await course.save();
+
+    return assignment;
+  };
+
+  const deleteAssignment = async (courseId, assignmentId) => {
+    const course = await CourseModel.findById(courseId);
+    if (!course) return null;
+
+    course.assignments = course.assignments.filter(a => a._id !== assignmentId);
+    await course.save();
+
+    return true;
+  };
 
   return {
     findAssignmentsForCourse,

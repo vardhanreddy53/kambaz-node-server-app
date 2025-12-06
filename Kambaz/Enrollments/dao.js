@@ -1,49 +1,44 @@
-import { v4 as uuidv4 } from "uuid";
-
 export default function EnrollmentsDao(db) {
+  async function enrollUserInCourse(userId, courseId) {
+    const exists = db.enrollments.some(
+      (e) => e.user === userId && e.course === courseId
+    );
 
-    function findEnrollmentsByCourse(courseId) {
-        return db.enrollments.filter((e) => e.course === courseId);
-    }
+    if (exists) return null;
 
-    function findEnrollmentsByUser(userId) {
-        return db.enrollments.filter((e) => e.user === userId);
-    }
-
-    function findEnrollment(userId, courseId) {
-        return db.enrollments.find((e) => e.user === userId && e.course === courseId);
-    }
-
-    function enrollUserInCourse(userId, courseId) {
-        const { enrollments } = db;
-        
-        const existing = findEnrollment(userId, courseId);
-        if (existing) {
-            return existing;
-        }
-
-        const newEnrollment = { 
-            _id: uuidv4(), 
-            user: userId, 
-            course: courseId 
-        };
-        enrollments.push(newEnrollment);
-        return newEnrollment;
-    }
-    
-    function unenrollUserFromCourse(userId, courseId) {
-        const initialLength = db.enrollments.length;
-        db.enrollments = db.enrollments.filter(
-            (e) => !(e.user === userId && e.course === courseId)
-        );
-        return initialLength !== db.enrollments.length;
-    }
-
-    return { 
-        findEnrollmentsByCourse,
-        findEnrollmentsByUser,
-        findEnrollment,
-        enrollUserInCourse,
-        unenrollUserFromCourse,
+    const newEnrollment = {
+      _id: Date.now().toString(),
+      user: userId,
+      course: courseId,
     };
+
+    db.enrollments.push(newEnrollment);
+    return newEnrollment;
+  }
+
+  async function unenrollUserFromCourse(userId, courseId) {
+    const index = db.enrollments.findIndex(
+      (e) => e.user === userId && e.course === courseId
+    );
+
+    if (index === -1) return false;
+
+    db.enrollments.splice(index, 1);
+    return true;
+  }
+
+  async function findEnrollmentsByUser(userId) {
+    return db.enrollments.filter((e) => e.user === userId);
+  }
+
+  async function findEnrollmentsByCourse(courseId) {
+    return db.enrollments.filter((e) => e.course === courseId);
+  }
+
+  return {
+    enrollUserInCourse,
+    unenrollUserFromCourse,
+    findEnrollmentsByUser,
+    findEnrollmentsByCourse,
+  };
 }
