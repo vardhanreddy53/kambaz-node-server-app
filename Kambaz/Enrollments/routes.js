@@ -1,7 +1,7 @@
 import EnrollmentsDao from "./dao.js";
 
-const EnrollmentRoutes = (app, db) => {
-  const dao = EnrollmentsDao(db);
+const EnrollmentRoutes = (app) => {
+  const dao = EnrollmentsDao();
 
   const enrollInCourse = async (req, res) => {
     try {

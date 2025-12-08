@@ -1,38 +1,44 @@
-export default function EnrollmentsDao(db) {
+import EnrollmentModel from "./model.js";
+
+export default function EnrollmentsDao() {
   async function enrollUserInCourse(userId, courseId) {
-    const exists = db.enrollments.some(
-      (e) => e.user === userId && e.course === courseId
-    );
+    // Check if enrollment already exists in database
+    const exists = await EnrollmentModel.findOne({
+      user: userId,
+      course: courseId
+    });
 
     if (exists) return null;
 
-    const newEnrollment = {
+    // Create and SAVE to database
+    const newEnrollment = new EnrollmentModel({
       _id: Date.now().toString(),
       user: userId,
       course: courseId,
-    };
+      enrollmentDate: new Date(),
+      status: "ENROLLED"
+    });
 
-    db.enrollments.push(newEnrollment);
+    await newEnrollment.save(); // ✅ This actually saves to MongoDB!
     return newEnrollment;
   }
 
   async function unenrollUserFromCourse(userId, courseId) {
-    const index = db.enrollments.findIndex(
-      (e) => e.user === userId && e.course === courseId
-    );
+    // Delete from database
+    const result = await EnrollmentModel.deleteOne({
+      user: userId,
+      course: courseId
+    });
 
-    if (index === -1) return false;
-
-    db.enrollments.splice(index, 1);
-    return true;
+    return result.deletedCount > 0;
   }
 
   async function findEnrollmentsByUser(userId) {
-    return db.enrollments.filter((e) => e.user === userId);
+    return await EnrollmentModel.find({ user: userId });
   }
 
   async function findEnrollmentsByCourse(courseId) {
-    return db.enrollments.filter((e) => e.course === courseId);
+    return await EnrollmentModel.find({ course: courseId });
   }
 
   return {

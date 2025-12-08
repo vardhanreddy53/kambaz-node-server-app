@@ -14,6 +14,8 @@ import CourseRoutes from "./Kambaz/Courses/routes.js";
 import AssignmentRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentRoutes from './Kambaz/Enrollments/routes.js';
 import ModulesRoutes from "./Kambaz/Modules/routes.js";
+import QuizRoutes from "./Kambaz/Quizzes/routes.js";
+import QuizAttempt from "./Kambaz/QuizAttempts/routes.js"
 import mongoose from "mongoose";
 
 
@@ -47,6 +49,8 @@ CourseRoutes(app, db);
 ModulesRoutes(app,db);
 AssignmentRoutes(app, db);
 EnrollmentRoutes(app, db);
+QuizRoutes(app); 
+QuizAttempt(app);
 
 Hello(app);
 Lab5(app);
